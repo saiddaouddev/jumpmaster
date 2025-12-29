@@ -19,7 +19,6 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   int _currentIndex = 1;
-  int profileCompletionvalue = 0;
   final List<Widget> _pages = const [
     HomePage(),
     LeaderboardPage(),
@@ -31,9 +30,7 @@ class _LandingPageState extends State<LandingPage> {
         await ApiService.callApi(api: "me", method: "GET");
 
     if (data["success"] == true) {
-      setState(() {
-        profileCompletionvalue = data["profile_completion"] ?? 0;
-      });
+      Constants.profileCompletion.value = data["profile_completion"] ?? 0;
     }
   }
 
@@ -93,16 +90,23 @@ class _LandingPageState extends State<LandingPage> {
       ),
       body: Column(
         children: [
-          profileCompletionvalue == 100 || _currentIndex == 1
-              ? Container()
-              : ProfileCompletionWidget(
-                  percentage: profileCompletionvalue, // from 0 to 100
-                ),
-          profileCompletionvalue == 100 || _currentIndex == 1
-              ? Container()
-              : SizedBox(
-                  height: 5,
-                ),
+          ValueListenableBuilder<int>(
+            valueListenable: Constants.profileCompletion,
+            builder: (context, value, _) {
+              if (value == 100 || _currentIndex == 1) {
+                return Container();
+              }
+
+              return Column(
+                children: [
+                  ProfileCompletionWidget(
+                    percentage: value,
+                  ),
+                  const SizedBox(height: 5),
+                ],
+              );
+            },
+          ),
           Expanded(child: _pages[_currentIndex])
         ],
       ),

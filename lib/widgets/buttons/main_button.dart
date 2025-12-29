@@ -42,7 +42,7 @@ class MainButton extends StatelessWidget {
           child: Text(
             str,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: Constants.FS14,
               color: Constants.maintextColor,
               fontWeight: FontWeight.bold,
             ),

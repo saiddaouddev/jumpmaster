@@ -209,8 +209,8 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                 backgroundColor: Colors.amber,
                 child: Text(
                   "$rank",
-                  style: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: Constants.FS12, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -312,7 +312,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
               "scoresresetinfo".tr,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.85),
-                fontSize: 13,
+                fontSize: Constants.FS14,
                 height: 1.4,
               ),
             ),

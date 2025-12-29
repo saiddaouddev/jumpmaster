@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 
 class Constants {
-  static String baseUrl = 'http://10.10.10.21:8000/api/';
+  static String baseUrl = 'http://192.168.1.103:8000/api/';
   static double sw = 0.0;
   static double sh = 0.0;
+  static ValueNotifier<int> profileCompletion = ValueNotifier<int>(0);  
+
+  //fontsize
+  static double FS12 = 12.0;
+  static double FS14 = 14.0;
+  static double FS16 = 16.0;
+  static double FS18 = 18.0;
+  static double FS20 = 20.0;
+  static double FS22 = 22.0;
+  static double FS24 = 24.0;
+  static double FS36 = 36.0;
 
   //colors
   static Color backgroundcolor = const Color.fromARGB(255, 11, 11, 11);

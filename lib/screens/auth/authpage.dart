@@ -86,7 +86,7 @@ class _AuthPageState extends State<AuthPage> {
                                             color: Constants.maintextColor
                                                 .withOpacity(0.6),
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                            fontSize: Constants.FS16,
                                           ),
                                         ),
                                         SizedBox(height: 5),
@@ -96,7 +96,7 @@ class _AuthPageState extends State<AuthPage> {
                                           style: TextStyle(
                                             color: Constants.maintextColor,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 18,
+                                            fontSize: Constants.FS18,
                                           ),
                                         ),
                                       ],
@@ -109,7 +109,7 @@ class _AuthPageState extends State<AuthPage> {
                                       width: 48,
                                       height: 56,
                                       textStyle: TextStyle(
-                                        fontSize: 20,
+                                        fontSize: Constants.FS20,
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -168,7 +168,7 @@ class _AuthPageState extends State<AuthPage> {
                                       color: Constants.maintextColor
                                           .withOpacity(0.5),
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                                      fontSize: Constants.FS16,
                                     ),
                                   ),
                                   SizedBox(height: 5),
@@ -184,7 +184,7 @@ class _AuthPageState extends State<AuthPage> {
                                         color: Constants.maintextColor
                                             .withOpacity(0.8),
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                        fontSize: Constants.FS16,
                                       ),
                                     ),
                                   ),
@@ -239,7 +239,7 @@ class _AuthPageState extends State<AuthPage> {
                                         style: TextStyle(
                                           color: Constants.maintextColor,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 36,
+                                          fontSize: Constants.FS36,
                                         ),
                                       ),
                                       Text(
@@ -250,7 +250,7 @@ class _AuthPageState extends State<AuthPage> {
                                           color: Constants.maintextColor
                                               .withOpacity(0.5),
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                                          fontSize: Constants.FS16,
                                         ),
                                       ),
                                       SizedBox(height: 30),
@@ -265,7 +265,7 @@ class _AuthPageState extends State<AuthPage> {
                                             color: Constants.maintextColor
                                                 .withOpacity(0.5),
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 14,
+                                            fontSize: Constants.FS14,
                                           ),
                                         ),
                                       ),
@@ -308,7 +308,7 @@ class _AuthPageState extends State<AuthPage> {
                                                     color:
                                                         Constants.maintextColor,
                                                     fontWeight: FontWeight.bold,
-                                                    fontSize: 18,
+                                                    fontSize: Constants.FS18,
                                                   ),
                                                   textAlign: TextAlign.center,
                                                 ),
@@ -332,7 +332,7 @@ class _AuthPageState extends State<AuthPage> {
                                                   style: TextStyle(
                                                     color:
                                                         Constants.maintextColor,
-                                                    fontSize: 18,
+                                                    fontSize: Constants.FS18,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                   textInputAction:

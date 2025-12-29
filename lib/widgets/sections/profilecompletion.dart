@@ -26,7 +26,7 @@ class ProfileCompletionWidget extends StatelessWidget {
                 "profilecompletion".tr,
                 style: TextStyle(
                   color: Constants.maintextColor,
-                  fontSize: 16,
+                  fontSize: Constants.FS16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -34,7 +34,7 @@ class ProfileCompletionWidget extends StatelessWidget {
                 "$percentage%",
                 style: TextStyle(
                   color: Constants.maintextColor,
-                  fontSize: 16,
+                  fontSize: Constants.FS16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
