@@ -29,14 +29,12 @@ class _ProfileState extends State<Profile> {
   XFile? selectedImage;
   final ImagePicker imagePicker = ImagePicker();
 
-  Future<void> changeAvatar() async {
-    /// 1️⃣ Pick image
+  Future<void> changeAvatar() async { 
     final XFile? picked =
         await imagePicker.pickImage(source: ImageSource.gallery);
 
     if (picked == null) return;
-
-    /// 2️⃣ Open FULL SCREEN cropper (Instagram style)
+ 
     final CroppedFile? croppedFile = await ImageCropper().cropImage(
       sourcePath: picked.path,
       aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
@@ -61,28 +59,22 @@ class _ProfileState extends State<Profile> {
       ],
     );
 
-    if (croppedFile == null) return;
-
-    /// 3️⃣ Show preview instantly
+    if (croppedFile == null) return; 
     setState(() {
       selectedImage = XFile(croppedFile.path);
     });
-
-    /// 4️⃣ Upload CROPPED image
+ 
     final Map<String, dynamic> data = await ApiService.callApi(
       api: "profile/avatar",
       method: "MULTIPART",
       imageFile: selectedImage,
     );
-
-    /// 5️⃣ Update UI from backend
+ 
     if (data["success"] == true) {
       setState(() {
-        avatar = "${Constants.baseUrl}${data["avatar"]}";
-        // selectedImage = null;
+        avatar = "${Constants.baseUrl}${data["avatar"]}"; 
       });
-
-      /// 🔄 Update global profile completion instantly
+ 
       Constants.profileCompletion.value =
           data["profile_completion"] ?? Constants.profileCompletion.value;
     }
@@ -108,8 +100,7 @@ class _ProfileState extends State<Profile> {
       setState(() {
         loading = false;
         username = data["user"]["username"] ?? "";
-        avatar = "http://192.168.1.103:8000" + data["user"]["avatar"] ?? "";
-        log("#123 img url: " + avatar);
+        avatar = "http://192.168.1.103:8000" + data["user"]["avatar"] ?? ""; 
         fullname = data["user"]["full_name"] ?? "";
         displayname = data["user"]["name"] ?? "";
         email = data["user"]["email"] ?? "";
