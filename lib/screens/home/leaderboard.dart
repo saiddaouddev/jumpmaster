@@ -252,7 +252,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2A2A),
+              color: Colors.white.withOpacity(0.07),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(

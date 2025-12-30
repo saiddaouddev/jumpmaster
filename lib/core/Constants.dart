@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 class Constants {
-  static String baseUrl = 'http://192.168.1.103:8000/api/';
+  static String baseUrl = 'http://10.10.10.21:8000/api/';
   static double sw = 0.0;
   static double sh = 0.0;
-  static ValueNotifier<int> profileCompletion = ValueNotifier<int>(0);  
+  static ValueNotifier<int> profileCompletion = ValueNotifier<int>(0);
 
   //fontsize
+  static double FS10 = 10.0;
   static double FS12 = 12.0;
   static double FS14 = 14.0;
   static double FS16 = 16.0;
@@ -59,14 +60,14 @@ class Constants {
   ];
 
   //font size
-  static double FS1 = 11;
-  static double FS2 = 13;
-  static double FS3 = 15;
-  static double FS4 = 17;
-  static double FS5 = 19;
-  static double FS6 = 21;
-  static double FS7 = 23;
-  static double FS8 = 25;
-  static double FS9 = 30;
-  static double FS10 = 36;
+  // static double FS1 = 11;
+  // static double FS2 = 13;
+  // static double FS3 = 15;
+  // static double FS4 = 17;
+  // static double FS5 = 19;
+  // static double FS6 = 21;
+  // static double FS7 = 23;
+  // static double FS8 = 25;
+  // static double FS9 = 30;
+  // static double FS10 = 36;
 }

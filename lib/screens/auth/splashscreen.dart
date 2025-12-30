@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 authenticating ? "signingin".tr : "initializing".tr,
                 style: TextStyle(
                   color: Constants.maintextColor,
-                  fontSize: Constants.FS6,
+                  fontSize: Constants.FS18,
                 ),
               ),
               SizedBox(
@@ -97,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen> {
     setState(() {
       authenticating = false;
     });
-    Future.delayed(Duration(seconds: 2), () { 
+    Future.delayed(Duration(seconds: 2), () {
       context.go('/auth');
       // Navigator.push(
       //   context,
@@ -107,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void signin() async {
-    authenticating = true; 
+    authenticating = true;
 
     var data = await ApiService.callApi(
       api: 'signin',

@@ -3,10 +3,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jumpmaster/core/Constants.dart';
+import 'package:jumpmaster/core/storage.dart';
 import 'package:jumpmaster/services/apiService.dart';
+import 'package:jumpmaster/utils/bottomsheet.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -29,12 +32,12 @@ class _ProfileState extends State<Profile> {
   XFile? selectedImage;
   final ImagePicker imagePicker = ImagePicker();
 
-  Future<void> changeAvatar() async { 
+  Future<void> changeAvatar() async {
     final XFile? picked =
         await imagePicker.pickImage(source: ImageSource.gallery);
 
     if (picked == null) return;
- 
+
     final CroppedFile? croppedFile = await ImageCropper().cropImage(
       sourcePath: picked.path,
       aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
@@ -59,22 +62,22 @@ class _ProfileState extends State<Profile> {
       ],
     );
 
-    if (croppedFile == null) return; 
+    if (croppedFile == null) return;
     setState(() {
       selectedImage = XFile(croppedFile.path);
     });
- 
+
     final Map<String, dynamic> data = await ApiService.callApi(
       api: "profile/avatar",
       method: "MULTIPART",
       imageFile: selectedImage,
     );
- 
+
     if (data["success"] == true) {
       setState(() {
-        avatar = "${Constants.baseUrl}${data["avatar"]}"; 
+        avatar = "${Constants.baseUrl}${data["avatar"]}";
       });
- 
+
       Constants.profileCompletion.value =
           data["profile_completion"] ?? Constants.profileCompletion.value;
     }
@@ -100,7 +103,7 @@ class _ProfileState extends State<Profile> {
       setState(() {
         loading = false;
         username = data["user"]["username"] ?? "";
-        avatar = "http://192.168.1.103:8000" + data["user"]["avatar"] ?? ""; 
+        avatar = "http://10.10.10.21:8000" + data["user"]["avatar"] ?? "";
         fullname = data["user"]["full_name"] ?? "";
         displayname = data["user"]["name"] ?? "";
         email = data["user"]["email"] ?? "";
@@ -118,6 +121,21 @@ class _ProfileState extends State<Profile> {
 
     if (data["success"] == true) {
       getMe();
+    }
+  }
+
+  void logout() async {
+    var data = await ApiService.callApi(
+      api: "auth/logout",
+      method: "POST",
+    );
+
+    if (!mounted) return; // 🔑 VERY IMPORTANT
+
+    if (data["success"] == true) {
+      pref.write("token", null);
+      pref.write("phone", null);
+      context.go('/auth');
     }
   }
 
@@ -307,8 +325,23 @@ class _ProfileState extends State<Profile> {
                 fieldKey: "address",
               );
             }),
-            profiletile("logout".tr, "logoutaccount".tr, Icons.logout,
-                showArrow: false),
+            GestureDetector(
+                onTap: () {
+                  AppConfirmSheet.show(
+                    context: context,
+                    headerText: "logoutmsg".tr,
+                    titleText: "",
+                    negativeText: "no".tr,
+                    positiveText: "yes".tr,
+                    onNegativeTap: () {},
+                    onPositiveTap: () {
+                      logout();
+                    },
+                  );
+                },
+                child: profiletile(
+                    "logout".tr, "logoutaccount".tr, Icons.logout,
+                    showArrow: false)),
           ],
         ),
 
