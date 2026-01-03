@@ -13,6 +13,10 @@ import 'package:jumpmaster/models/workout.dart';
 import 'package:jumpmaster/services/apiService.dart';
 import 'package:jumpmaster/utils/bottomsheet.dart';
 import 'package:jumpmaster/widgets/cards/AchievementTrainItem.dart';
+import 'package:jumpmaster/widgets/cards/shareWorkoutCard.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -23,6 +27,7 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   List<Achievement> achievementsList = [];
+  final ScreenshotController controller = ScreenshotController();
 
   bool isFirstLoad = true;
   String username = "";
@@ -36,6 +41,30 @@ class _ProfileState extends State<Profile> {
 
   XFile? selectedImage;
   final ImagePicker imagePicker = ImagePicker();
+
+  Future<void> shareWorkout(String jumps, int sec, String cal) async {
+    final image = await controller.captureFromWidget(
+      Material(
+          type: MaterialType.transparency, // 🔥 critical
+          child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: ShareWorkoutCard(
+                jumps: jumps,
+                timeSeconds: sec,
+                calories: cal,
+              ))),
+      pixelRatio: 3,
+    );
+
+    final dir = await getTemporaryDirectory();
+    final file = File("${dir.path}/jump_master.png");
+    await file.writeAsBytes(image);
+
+    Share.shareXFiles(
+      [XFile(file.path)],
+      text: "Just smashed my jump rope workout 💪🔥",
+    );
+  }
 
   Future<void> changeAvatar() async {
     final XFile? picked =
@@ -433,7 +462,14 @@ class _ProfileState extends State<Profile> {
                 itemCount: workouts.length + 1,
                 itemBuilder: (context, index) {
                   if (index < workouts.length) {
-                    return _workoutTile(workouts[index]);
+                    return GestureDetector(
+                        onTap: () {
+                          shareWorkout(
+                              workouts[index].jumps.toString(),
+                              workouts[index].durationSeconds,
+                              workouts[index].calories.toStringAsFixed(0));
+                        },
+                        child: _workoutTile(workouts[index]));
                   }
 
                   if (isMoreLoading) {

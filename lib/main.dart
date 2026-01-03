@@ -33,7 +33,6 @@ updateLocale() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
-  log("##########################################");
   updateLocale();
   final router = GoRouter(
     initialLocation: '/',
