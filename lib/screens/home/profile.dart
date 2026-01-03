@@ -8,9 +8,11 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jumpmaster/core/Constants.dart';
 import 'package:jumpmaster/core/storage.dart';
+import 'package:jumpmaster/models/achievements.dart';
 import 'package:jumpmaster/models/workout.dart';
 import 'package:jumpmaster/services/apiService.dart';
 import 'package:jumpmaster/utils/bottomsheet.dart';
+import 'package:jumpmaster/widgets/cards/AchievementTrainItem.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -20,6 +22,8 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  List<Achievement> achievementsList = [];
+
   bool isFirstLoad = true;
   String username = "";
   String avatar = "";
@@ -89,6 +93,7 @@ class _ProfileState extends State<Profile> {
     super.initState();
     getMe();
     getWorkouts();
+    getAchievements();
     scrollController.addListener(() {
       if (scrollController.position.pixels >=
               scrollController.position.maxScrollExtent - 200 &&
@@ -110,6 +115,19 @@ class _ProfileState extends State<Profile> {
   int lastPage = 1;
 
   final ScrollController scrollController = ScrollController();
+
+  Future<void> getAchievements() async {
+    final Map<String, dynamic> data = await ApiService.callApi(
+      api: "achievements",
+      method: "GET",
+    );
+
+    if (data["success"] == true) {
+      final List list = data["data"];
+
+      achievementsList = list.map((e) => Achievement.fromJson(e)).toList();
+    }
+  }
 
   Future<void> getWorkouts({bool loadMore = false}) async {
     if (loadMore) {
@@ -329,7 +347,7 @@ class _ProfileState extends State<Profile> {
         tabs: [
           Tab(text: "basicinfo".tr),
           Tab(text: "workouts".tr),
-          Tab(text: "badges".tr),
+          Tab(text: "achievements".tr),
           Tab(text: "settings".tr),
         ],
       ),
@@ -340,6 +358,7 @@ class _ProfileState extends State<Profile> {
 
   Widget _tabViews() {
     return TabBarView(
+      physics: const NeverScrollableScrollPhysics(),
       children: [
         /// BASIC INFO
         ListView(
@@ -407,32 +426,42 @@ class _ProfileState extends State<Profile> {
         ),
 
         /// WORKOUTS
-       workouts.isEmpty?Text("youhavenoworkouts".tr): ListView.builder(
-          controller: scrollController,
-          itemCount: workouts.length + 1,
-          itemBuilder: (context, index) {
-            if (index < workouts.length) {
-              return _workoutTile(workouts[index]);
-            }
+        workouts.isEmpty
+            ? Text("youhavenoworkouts".tr)
+            : ListView.builder(
+                controller: scrollController,
+                itemCount: workouts.length + 1,
+                itemBuilder: (context, index) {
+                  if (index < workouts.length) {
+                    return _workoutTile(workouts[index]);
+                  }
 
-            if (isMoreLoading) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
+                  if (isMoreLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-            return const SizedBox.shrink();
-          },
-        ),
+                  return const SizedBox.shrink();
+                },
+              ),
 
         /// HISTORY
-        Center(
-          child: Text(
-            "Workout History",
-            style: TextStyle(color: Constants.maintextColor),
-          ),
-        ),
+        workouts.isEmpty
+            ? Text("achievementsnotavailable".tr)
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                itemCount: achievementsList.length,
+                itemBuilder: (context, index) {
+                  return AchievementTrainItem(
+                    achievement: achievementsList[index],
+                    isLast: index == achievementsList.length - 1,
+                    previousUnlocked:
+                        index > 0 && achievementsList[index - 1].unlocked,
+                  );
+                },
+              ),
 
         /// SETTINGS
         ListView(

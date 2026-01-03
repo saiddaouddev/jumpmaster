@@ -60,6 +60,7 @@ class LocaleString extends Translations {
           "workoutcompleted": "Workout Completed!",
           "me": "Me",
           "youhavenoworkouts": "You have no workouts yet.",
+          "achievementsnotavailable": "Achievements not available yet.",
         },
         'ar_AR': {},
         'fr_FR': {}
