@@ -8,6 +8,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jumpmaster/core/Constants.dart';
 import 'package:jumpmaster/core/storage.dart';
+import 'package:jumpmaster/models/workout.dart';
 import 'package:jumpmaster/services/apiService.dart';
 import 'package:jumpmaster/utils/bottomsheet.dart';
 
@@ -87,9 +88,63 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     getMe();
+    getWorkouts();
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+              scrollController.position.maxScrollExtent - 200 &&
+          !isMoreLoading &&
+          currentPage < lastPage) {
+        currentPage++;
+        getWorkouts(loadMore: true);
+      }
+    });
   }
 
   bool loading = false;
+  List<Workout> workouts = [];
+
+  bool isLoading = false;
+  bool isMoreLoading = false;
+
+  int currentPage = 1;
+  int lastPage = 1;
+
+  final ScrollController scrollController = ScrollController();
+
+  Future<void> getWorkouts({bool loadMore = false}) async {
+    if (loadMore) {
+      isMoreLoading = true;
+    } else {
+      isLoading = true;
+      currentPage = 1;
+      workouts.clear();
+    }
+
+    setState(() {});
+
+    final Map<String, dynamic> data = await ApiService.callApi(
+      api: "me/workouts?page=$currentPage",
+      method: "GET",
+    );
+
+    if (data["success"] == true) {
+      final response = data["data"];
+
+      currentPage = response["current_page"];
+      lastPage = response["last_page"];
+
+      final List list = response["data"];
+
+      workouts.addAll(
+        list.map((e) => Workout.fromJson(e)).toList(),
+      );
+    }
+
+    isLoading = false;
+    isMoreLoading = false;
+    setState(() {});
+  }
+
   Future<void> getMe() async {
     if (isFirstLoad) {
       setState(() {
@@ -103,16 +158,22 @@ class _ProfileState extends State<Profile> {
       setState(() {
         loading = false;
         username = data["user"]["username"] ?? "";
-        avatar = "http://10.10.10.21:8000" + data["user"]["avatar"] ?? "";
+        avatar = data["user"]["avatar"] != null
+            ? "http://192.168.1.104:8000${data["user"]["avatar"]}"
+            : "";
         fullname = data["user"]["full_name"] ?? "";
         displayname = data["user"]["name"] ?? "";
         email = data["user"]["email"] ?? "";
         phone = data["user"]["phone"] ?? "";
         address = data["user"]["address"] ?? "";
         Constants.profileCompletion.value = data["profile_completion"] ?? 0;
-        isFirstLoad = false;
       });
     }
+    Future.delayed(const Duration(milliseconds: 100), () {
+      setState(() {
+        isFirstLoad = false;
+      });
+    });
   }
 
   Future<void> updateMe(String field, String value) async {
@@ -246,7 +307,7 @@ class _ProfileState extends State<Profile> {
     return Container(
       width: Constants.sw,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Constants.maintextColor.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
       ),
       child: TabBar(
@@ -268,7 +329,7 @@ class _ProfileState extends State<Profile> {
         tabs: [
           Tab(text: "basicinfo".tr),
           Tab(text: "workouts".tr),
-          Tab(text: "history".tr),
+          Tab(text: "badges".tr),
           Tab(text: "settings".tr),
         ],
       ),
@@ -346,11 +407,23 @@ class _ProfileState extends State<Profile> {
         ),
 
         /// WORKOUTS
-        Center(
-          child: Text(
-            "Workouts Section",
-            style: TextStyle(color: Constants.maintextColor),
-          ),
+       workouts.isEmpty?Text("youhavenoworkouts".tr): ListView.builder(
+          controller: scrollController,
+          itemCount: workouts.length + 1,
+          itemBuilder: (context, index) {
+            if (index < workouts.length) {
+              return _workoutTile(workouts[index]);
+            }
+
+            if (isMoreLoading) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            return const SizedBox.shrink();
+          },
         ),
 
         /// HISTORY
@@ -405,7 +478,7 @@ class _ProfileState extends State<Profile> {
       leading: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
+          color: Constants.maintextColor.withOpacity(0.07),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Icon(
@@ -476,7 +549,7 @@ class _ProfileState extends State<Profile> {
                 decoration: InputDecoration(
                   hintText: "taptoadd".tr,
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.07),
+                  fillColor: Constants.maintextColor.withOpacity(0.07),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -489,7 +562,8 @@ class _ProfileState extends State<Profile> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.15),
+                        backgroundColor:
+                            Constants.maintextColor.withOpacity(0.15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -533,5 +607,112 @@ class _ProfileState extends State<Profile> {
         );
       },
     );
+  }
+
+  Widget _workoutTile(Workout workout) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161616),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          // Left: Date
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Constants.mainblue.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                _dayText(workout.startedAt),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Constants.mainblue,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          // Middle: Stats
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  workout.startedAtFormatted.toString(),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Constants.maintextColor.withOpacity(0.5),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${workout.jumps} jumps • ${workout.durationSeconds} sec",
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Constants.maintextColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Right: Calories
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                "calories".tr,
+                style: TextStyle(fontSize: 12, color: Constants.maintextColor),
+              ),
+              Text(
+                "${workout.calories.toStringAsFixed(0)} kcal",
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Constants.maintextColor),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _dayText(DateTime date) {
+    return "${date.day}\n${_month(date.month)}";
+  }
+
+  String _month(int m) {
+    const months = [
+      "JAN",
+      "FEB",
+      "MAR",
+      "APR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AUG",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DEC"
+    ];
+    return months[m - 1];
   }
 }

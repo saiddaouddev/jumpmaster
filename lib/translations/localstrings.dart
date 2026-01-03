@@ -33,7 +33,7 @@ class LocaleString extends Translations {
           "phonenumber": "Phone Number",
           "basicinfo": "Basic Info",
           "workouts": "Workouts",
-          "history": "History",
+          "badges": "Badges",
           "fullname": "Full Name",
           "displayname": "Display Name",
           "settings": "Settings",
@@ -58,6 +58,8 @@ class LocaleString extends Translations {
           "todayworkout": "Today's Workouts",
           "totaljumps": "Total Jumps",
           "workoutcompleted": "Workout Completed!",
+          "me": "Me",
+          "youhavenoworkouts": "You have no workouts yet.",
         },
         'ar_AR': {},
         'fr_FR': {}

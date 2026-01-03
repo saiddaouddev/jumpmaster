@@ -56,12 +56,12 @@ class _WorkoutPageState extends State<WorkoutPage>
     final data = await ApiService.callApi(api: "stats/me", method: "GET");
 
     if (data["success"] == true && data["today"] != null) {
-      final today = data["today"];
+      final today = data["today"];  
       final user = data["user"];
       today_date = data["date"];
 
       setState(() {
-        user_avatar = "http://10.10.10.21:8000" + user["avatar"].toString();
+        user_avatar = "http://192.168.1.104:8000" + user["avatar"].toString();
         todayTotalJumps = today["total_jumps"].toString();
         todayTotalDuration = today["total_duration_seconds"].toString();
         todayTotalCalories = today["total_calories"].toString();
@@ -138,6 +138,7 @@ class _WorkoutPageState extends State<WorkoutPage>
       setState(() => isFreeRunning = false);
 
       sessionEnded = true;
+      getMystats();
     }
   }
 
@@ -163,7 +164,7 @@ class _WorkoutPageState extends State<WorkoutPage>
               const SizedBox(height: 25),
               sessionEnded
                   ? Container(
-                      height: Constants.sh / 2.3,
+                      height: Constants.sh / 2,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(

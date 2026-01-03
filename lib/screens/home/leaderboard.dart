@@ -16,66 +16,72 @@ class LeaderboardPage extends StatefulWidget {
 
 class _LeaderboardPageState extends State<LeaderboardPage>
     with SingleTickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
   Timer? _hideTimer;
   bool infobanner = true;
+  List<dynamic> leaderboard = [];
+  bool loadingLeaderboard = true;
+  String periodType = "month"; // month | week
 
-  Future<void> getLeaderboardData() async {
-    // Placeholder for future leaderboard data fetching logic
-    final Map<String, dynamic> data =
-        await ApiService.callApi(api: "leaderboard/month", method: "GET");
+  int? myRank;
+  int? myTotalJumps;
+
+  Map<String, dynamic> _getPodiumData(int index) {
+    if (leaderboard.length > index) {
+      return {
+        "exists": true,
+        "name": leaderboard[index]["display_name"],
+        "score": leaderboard[index]["total_jumps"],
+        "avatar": leaderboard[index]["avatar"],
+      };
+    }
+
+    // Placeholder
+    return {
+      "exists": false,
+      "name": "---",
+      "score": 0,
+      "avatar": null,
+    };
   }
 
-  void showMonthlyBanner() {
-    _hideTimer?.cancel();
+  Future<void> getLeaderboardData(String periodType) async {
+    loadingLeaderboard = true;
+    final Map<String, dynamic> data =
+        await ApiService.callApi(api: "leaderboard/$periodType", method: "GET");
+
+    if (!mounted) return;
 
     setState(() {
-      infobanner = true;
+      leaderboard = data["leaderboard"] ?? [];
+      myRank = data["my_rank"];
+      myTotalJumps = data["my_total_jumps"];
+      loadingLeaderboard = false;
     });
+  }
 
-    _fadeController.reset();
-
-    _hideTimer = Timer(const Duration(seconds: 5), () {
-      if (!mounted) return;
-
-      _fadeController.forward().then((_) {
-        if (mounted) {
-          setState(() {
-            infobanner = false; // REMOVE from layout
-          });
-        }
-      });
-    });
+  Widget _periodToggle() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _periodButton("Week"),
+          const SizedBox(width: 8),
+          _periodButton("Month"),
+        ],
+      ),
+    );
   }
 
   @override
   void initState() {
     super.initState();
-    getLeaderboardData();
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _fadeController,
-        curve: Curves.easeOut,
-      ),
-    );
-
-    // Show banner on page entry
-    showMonthlyBanner();
+    getLeaderboardData(periodType);
   }
 
   @override
   void dispose() {
     _hideTimer?.cancel();
-    _fadeController.dispose();
     super.dispose();
   }
 
@@ -85,12 +91,10 @@ class _LeaderboardPageState extends State<LeaderboardPage>
       backgroundColor: Constants.backgroundcolor,
       body: Column(
         children: [
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: infobanner ? monthlyInfoBanner() : SizedBox.shrink(),
-          ),
+          _periodToggle(),
           _podium(),
           const SizedBox(height: 40),
+          _myRankCard(),
           _rankList(),
         ],
       ),
@@ -133,8 +137,20 @@ class _LeaderboardPageState extends State<LeaderboardPage>
 
   // ================= PODIUM =================
   Widget _podium() {
-    return SizedBox(
-      height: 260,
+    if (!loadingLeaderboard && leaderboard.isEmpty) {
+      return _emptyLeaderboard();
+    }
+    if (loadingLeaderboard) {
+      return const SizedBox(height: 260);
+    }
+
+    final first = _getPodiumData(0);
+    final second = _getPodiumData(1);
+    final third = _getPodiumData(2);
+
+    return Container(
+      width: Constants.sw,
+      height: 300,
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
@@ -144,8 +160,10 @@ class _LeaderboardPageState extends State<LeaderboardPage>
             child: _podiumItem(
               rank: 2,
               height: 120,
-              name: "joshele...",
-              score: 105,
+              name: second["name"],
+              score: second["score"],
+              avatar: second["avatar"].toString(),
+              placeholder: !second["exists"],
             ),
           ),
 
@@ -154,10 +172,12 @@ class _LeaderboardPageState extends State<LeaderboardPage>
             offset: const Offset(0, 0),
             child: _podiumItem(
               rank: 1,
-              height: 160,
-              name: "lilyonetw...",
-              score: 146,
+              height: 130,
+              name: first["name"],
+              score: first["score"],
+              avatar: first["avatar"].toString(),
               crown: true,
+              placeholder: !first["exists"],
             ),
           ),
 
@@ -166,9 +186,11 @@ class _LeaderboardPageState extends State<LeaderboardPage>
             offset: const Offset(110, 30),
             child: _podiumItem(
               rank: 3,
-              height: 100,
-              name: "herotaylo...",
-              score: 99,
+              height: 110,
+              name: third["name"],
+              score: third["score"],
+              avatar: third["avatar"],
+              placeholder: !third["exists"],
             ),
           ),
         ],
@@ -181,7 +203,9 @@ class _LeaderboardPageState extends State<LeaderboardPage>
     required double height,
     required String name,
     required int score,
+    String? avatar,
     bool crown = false,
+    bool placeholder = false,
   }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -191,11 +215,16 @@ class _LeaderboardPageState extends State<LeaderboardPage>
           children: [
             CircleAvatar(
               radius: 26,
-              backgroundImage: const NetworkImage(
-                "https://i.pravatar.cc/150",
-              ),
+              backgroundColor:
+                  placeholder ? Colors.grey.shade700 : Colors.transparent,
+              backgroundImage: placeholder
+                  ? null
+                  : NetworkImage("http://192.168.1.104:8000" + avatar!),
+              child: placeholder
+                  ? const Icon(Icons.person, color: Colors.white24)
+                  : null,
             ),
-            if (crown)
+            if (crown && !placeholder)
               const Positioned(
                 top: -20,
                 right: -5,
@@ -210,31 +239,36 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                 child: Text(
                   "$rank",
                   style: TextStyle(
-                      fontSize: Constants.FS12, fontWeight: FontWeight.bold),
+                    fontSize: Constants.FS12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
           ],
         ),
+
         const SizedBox(height: 8),
-        Text(name, style: const TextStyle(color: Colors.white)),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icon(Icons.circle, color: Constants.mainblue, size: 10),
-            // const SizedBox(width: 4),
-            Text(
-              "$score",
-              style: const TextStyle(color: Colors.white70),
-            ),
-          ],
+
+        Text(
+          name,
+          style: TextStyle(
+            color: placeholder ? Colors.white38 : Colors.white,
+          ),
         ),
+
+        const SizedBox(height: 4),
+
+        if (!placeholder)
+          Text(
+            "$score",
+            style: const TextStyle(color: Colors.white70),
+          ),
 
         // PODIUM BLOCK
         Podium3D(
           width: 80,
-          height: 100,
+          height: height,
           number: "$rank",
         ),
       ],
@@ -243,11 +277,17 @@ class _LeaderboardPageState extends State<LeaderboardPage>
 
   // ================= LIST =================
   Widget _rankList() {
+    if (leaderboard.length <= 3) {
+      return const SizedBox.shrink();
+    }
+
     return Expanded(
       child: ListView.builder(
-        itemCount: 5,
+        itemCount: leaderboard.length - 3,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemBuilder: (_, i) {
+          final item = leaderboard[i + 3];
+
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(12),
@@ -262,21 +302,23 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                   style: const TextStyle(color: Colors.white70),
                 ),
                 const SizedBox(width: 12),
-                const CircleAvatar(
-                  backgroundImage: NetworkImage("https://i.pravatar.cc/150"),
+                CircleAvatar(
+                  backgroundImage: NetworkImage(
+                    Constants.baseUrl + item["avatar"],
+                  ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    "player_name",
-                    style: TextStyle(color: Colors.white),
+                    item["display_name"],
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
                 Icon(Icons.circle, color: Constants.mainblue, size: 10),
                 const SizedBox(width: 6),
-                const Text(
-                  "96",
-                  style: TextStyle(color: Colors.white),
+                Text(
+                  "${item["total_jumps"]}",
+                  style: const TextStyle(color: Colors.white),
                 ),
               ],
             ),
@@ -288,6 +330,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
 
   Widget monthlyInfoBanner() {
     return Container(
+      width: Constants.sw,
       margin:
           EdgeInsets.fromLTRB(16, infobanner ? 8 : 0, 16, infobanner ? 12 : 0),
       padding: EdgeInsets.symmetric(
@@ -316,6 +359,106 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                 height: 1.4,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _periodButton(String type) {
+    final bool active = periodType == type.toLowerCase();
+
+    return GestureDetector(
+      onTap: () {
+        if (active) return;
+
+        setState(() {
+          periodType = type.toLowerCase();
+        });
+
+        getLeaderboardData(periodType);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          type,
+          style: TextStyle(
+            color: active ? Colors.black : Colors.white70,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _myRankCard() {
+    if (myRank == null || myTotalJumps == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Constants.mainblue.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Constants.mainblue),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.person, color: Colors.white),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              "me".tr,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Text(
+            "#$myRank",
+            style: const TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(width: 10),
+          Icon(Icons.circle, color: Constants.mainblue, size: 8),
+          const SizedBox(width: 6),
+          Text(
+            "$myTotalJumps",
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyLeaderboard() {
+    return Container(
+      width: Constants.sw,
+      height: 260,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.emoji_events, size: 48, color: Colors.white24),
+          SizedBox(height: 12),
+          Text(
+            "Be the first 🔥",
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            "Start a workout and claim the top spot",
+            style: TextStyle(color: Colors.white38),
           ),
         ],
       ),

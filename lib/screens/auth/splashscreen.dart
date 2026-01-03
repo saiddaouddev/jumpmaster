@@ -114,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen> {
       method: 'POST',
       data: {"phone": pref.read("phone"), "token": pref.read("token")},
     );
-    if (data["success"]) {
+    if (data["success"]!=null && data["success"] == true) {
       pref.write("token", data["token"]);
 
       context.go('/home');
