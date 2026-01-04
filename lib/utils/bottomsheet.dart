@@ -113,13 +113,16 @@ class AppConfirmSheet {
                         margin: const EdgeInsets.all(5),
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Constants.mainred,
+                          color: headerText == "logoutmsg".tr
+                              ? Constants.mainred
+                              : Constants.mainblue,
                           borderRadius: BorderRadius.circular(30),
                         ),
                         child: Center(
                           child: Text(
                             positiveText.tr,
                             style: TextStyle(
+                              fontWeight: FontWeight.bold,
                               color: Constants.maintextColor,
                               fontSize: Constants.FS12,
                             ),

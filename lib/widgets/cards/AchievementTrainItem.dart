@@ -5,12 +5,14 @@ import 'package:jumpmaster/core/Constants.dart';
 import 'package:jumpmaster/models/achievements.dart';
 
 class AchievementTrainItem extends StatelessWidget {
+  final int index;
   final Achievement achievement;
   final bool isLast;
   final bool previousUnlocked;
 
   const AchievementTrainItem({
     Key? key,
+    required this.index,
     required this.achievement,
     required this.isLast,
     required this.previousUnlocked,
@@ -31,9 +33,11 @@ class AchievementTrainItem extends StatelessWidget {
             Container(
                 width: 2,
                 height: 30,
-                color: achievement.unlocked
-                    ? activeColor.withOpacity(0.6)
-                    : inactiveColor.withOpacity(0.4)),
+                color: index == 0
+                    ? Colors.transparent
+                    : achievement.unlocked
+                        ? activeColor.withOpacity(0.6)
+                        : inactiveColor.withOpacity(0.4)),
             Container(
               width: 14,
               height: 14,

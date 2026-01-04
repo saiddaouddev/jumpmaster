@@ -61,6 +61,9 @@ class LocaleString extends Translations {
           "me": "Me",
           "youhavenoworkouts": "You have no workouts yet.",
           "achievementsnotavailable": "Achievements not available yet.",
+          "savetogallery":"Save To Gallery",
+          "sharetosocials":"Share To Socials",
+          "shareworkoutmsg":"Share Workout"
         },
         'ar_AR': {},
         'fr_FR': {}

@@ -30,36 +30,29 @@ class ShareWorkoutCard extends StatelessWidget {
         color: Colors.transparent,
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          /// Logo
-          ClipRRect(
-              borderRadius: BorderRadius.circular(60),
-              child: Image.asset(
-                "assets/logo.png",
-                height: 120,
-              )),
-
           /// Jumps
-          Column(
-            children: [
-              Text(
-                jumps.toString(),
-                style: TextStyle(
-                  fontSize: 60,
-                  fontWeight: FontWeight.bold,
-                  color: Constants.mainblue,
-                ),
-              ),
-              const Text(
-                "JUMPS",
-                style: TextStyle(
-                  letterSpacing: 4,
-                  fontSize: 26,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
+
+          Text(
+            jumps.toString(),
+            style: TextStyle(
+              fontSize: 60,
+              fontWeight: FontWeight.bold,
+              color: Constants.mainblue,
+            ),
+          ),
+          const Text(
+            "JUMPS",
+            style: TextStyle(
+              letterSpacing: 4,
+              fontSize: 26,
+              color: Colors.white70,
+            ),
+          ),
+          SizedBox(
+            height: 40,
           ),
 
           /// Stats row
@@ -78,14 +71,32 @@ class ShareWorkoutCard extends StatelessWidget {
               ),
             ],
           ),
+          SizedBox(
+            height: 20,
+          ),
 
           /// Footer
-          const Text(
-            "#JumpMaster",
-            style: TextStyle(
-              color: Colors.white38,
-              fontSize: 20,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              /// Logo
+              ClipRRect(
+                  borderRadius: BorderRadius.circular(60),
+                  child: Image.asset(
+                    "assets/logo.png",
+                    height: 30,
+                  )),
+              SizedBox(
+                width: 15,
+              ),
+              const Text(
+                "#JumpMaster",
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 20,
+                ),
+              )
+            ],
           ),
         ],
       ),

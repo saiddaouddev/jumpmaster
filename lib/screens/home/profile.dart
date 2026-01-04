@@ -1,10 +1,14 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:get/utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
+// import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jumpmaster/core/Constants.dart';
 import 'package:jumpmaster/core/storage.dart';
@@ -15,6 +19,7 @@ import 'package:jumpmaster/utils/bottomsheet.dart';
 import 'package:jumpmaster/widgets/cards/AchievementTrainItem.dart';
 import 'package:jumpmaster/widgets/cards/shareWorkoutCard.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -41,6 +46,44 @@ class _ProfileState extends State<Profile> {
 
   XFile? selectedImage;
   final ImagePicker imagePicker = ImagePicker();
+  Future<void> onSavePressed(String jumps, int sec, String cal) async {
+    try {
+      final bytes = await controller.captureFromWidget(
+        Material(
+          type: MaterialType.transparency,
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: ShareWorkoutCard(
+              jumps: jumps,
+              timeSeconds: sec,
+              calories: cal,
+            ),
+          ),
+        ),
+        pixelRatio: 3,
+      );
+
+      if (bytes == null) return;
+
+      await saveToGallery(bytes);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Saved to gallery")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to save image")),
+      );
+    }
+  }
+
+  Future<void> saveToGallery(Uint8List bytes) async {
+    await Gal.putImageBytes(
+      bytes,
+      album: "Jump Master",
+      name: "jump_master_${DateTime.now().millisecondsSinceEpoch}.png",
+    );
+  }
 
   Future<void> shareWorkout(String jumps, int sec, String cal) async {
     final image = await controller.captureFromWidget(
@@ -464,10 +507,29 @@ class _ProfileState extends State<Profile> {
                   if (index < workouts.length) {
                     return GestureDetector(
                         onTap: () {
-                          shareWorkout(
-                              workouts[index].jumps.toString(),
-                              workouts[index].durationSeconds,
-                              workouts[index].calories.toStringAsFixed(0));
+                          AppConfirmSheet.show(
+                            context: context,
+                            headerText: "shareworkoutmsg".tr,
+                            titleText: "",
+                            negativeText: "savetogallery".tr,
+                            positiveText: "sharetosocials".tr,
+                            onNegativeTap: () {
+                              onSavePressed(
+                                  workouts[index].jumps.toString(),
+                                  workouts[index].durationSeconds,
+                                  workouts[index].calories.toStringAsFixed(0));
+                            },
+                            onPositiveTap: () {
+                              shareWorkout(
+                                  workouts[index].jumps.toString(),
+                                  workouts[index].durationSeconds,
+                                  workouts[index].calories.toStringAsFixed(0));
+                            },
+                          );
+                          // shareWorkout(
+                          //     workouts[index].jumps.toString(),
+                          //     workouts[index].durationSeconds,
+                          //     workouts[index].calories.toStringAsFixed(0));
                         },
                         child: _workoutTile(workouts[index]));
                   }
@@ -491,6 +553,7 @@ class _ProfileState extends State<Profile> {
                 itemCount: achievementsList.length,
                 itemBuilder: (context, index) {
                   return AchievementTrainItem(
+                    index: index,
                     achievement: achievementsList[index],
                     isLast: index == achievementsList.length - 1,
                     previousUnlocked:
@@ -742,15 +805,34 @@ class _ProfileState extends State<Profile> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                "calories".tr,
-                style: TextStyle(fontSize: 12, color: Constants.maintextColor),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Text(
+                  //   "calories".tr,
+                  //   style: TextStyle(
+                  //     fontSize: 12,
+                  //     color: Constants.maintextColor,
+                  //   ),
+                  // ),
+                  // const SizedBox(width: 6),
+                  Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.share,
+                      size: 18,
+                      color: Constants.maintextColor.withOpacity(0.6),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 2),
               Text(
                 "${workout.calories.toStringAsFixed(0)} kcal",
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Constants.maintextColor),
+                  fontWeight: FontWeight.bold,
+                  color: Constants.maintextColor,
+                ),
               ),
             ],
           ),
