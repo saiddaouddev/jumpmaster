@@ -80,7 +80,7 @@ class AchievementTrainItem extends StatelessWidget {
                 Text(
                   achievement.title,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: Constants.FS16,
                     fontWeight: FontWeight.bold,
                     color: achievement.unlocked
                         ? activeColor
@@ -91,7 +91,7 @@ class AchievementTrainItem extends StatelessWidget {
                 Text(
                   achievement.description,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: Constants.FS12,
                     color: Colors.grey.shade600,
                   ),
                 ),

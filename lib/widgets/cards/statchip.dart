@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jumpmaster/core/Constants.dart';
 
 Widget statChip({required IconData icon, required String label}) {
   return Container(
@@ -13,9 +14,9 @@ Widget statChip({required IconData icon, required String label}) {
         const SizedBox(width: 6),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 13,
+            fontSize: Constants.FS12,
             fontWeight: FontWeight.w500,
           ),
         ),

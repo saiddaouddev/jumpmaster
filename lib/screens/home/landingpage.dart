@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
 import 'package:jumpmaster/core/Constants.dart';
+import 'package:jumpmaster/core/sound_manager.dart';
 import 'package:jumpmaster/core/storage.dart';
+import 'package:jumpmaster/core/vibration_manager.dart';
 import 'package:jumpmaster/screens/auth/authpage.dart';
 import 'package:jumpmaster/screens/home/homepage.dart';
 import 'package:jumpmaster/screens/home/leaderboard.dart';
@@ -9,6 +11,7 @@ import 'package:jumpmaster/screens/home/profile.dart';
 import 'package:jumpmaster/screens/home/workoutpage.dart';
 import 'package:jumpmaster/services/apiService.dart';
 import 'package:jumpmaster/widgets/sections/profilecompletion.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -34,8 +37,13 @@ class _LandingPageState extends State<LandingPage> {
     }
   }
 
+  Future<void> requestNotificationPermission() async {
+    await Permission.notification.request();
+  }
+
   @override
   void initState() {
+    requestNotificationPermission();
     getMe();
     // TODO: implement initState
     super.initState();
@@ -59,6 +67,8 @@ class _LandingPageState extends State<LandingPage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        unselectedFontSize: Constants.FS14,
+        selectedFontSize: Constants.FS16,
         backgroundColor: Constants.backgroundcolor,
         currentIndex: _currentIndex,
         onTap: (index) {

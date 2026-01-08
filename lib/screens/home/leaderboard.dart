@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
 import 'package:jumpmaster/services/apiService.dart';
+import 'package:jumpmaster/utils/profile_avatar_viewer.dart';
 import 'package:jumpmaster/widgets/cards/podium3d.dart';
 
 import '../../core/Constants.dart';
@@ -129,6 +130,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
         text,
         style: TextStyle(
           color: active ? Colors.black : Colors.white70,
+          fontSize: Constants.FS14,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -158,6 +160,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
           Transform.translate(
             offset: const Offset(-110, 30),
             child: _podiumItem(
+              heroTag: 'podium-avatar-2',
               rank: 2,
               height: 120,
               name: second["name"],
@@ -171,6 +174,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
           Transform.translate(
             offset: const Offset(0, 0),
             child: _podiumItem(
+              heroTag: 'podium-avatar-1',
               rank: 1,
               height: 130,
               name: first["name"],
@@ -185,6 +189,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
           Transform.translate(
             offset: const Offset(110, 30),
             child: _podiumItem(
+              heroTag: 'podium-avatar-3',
               rank: 3,
               height: 110,
               name: third["name"],
@@ -206,6 +211,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
     String? avatar,
     bool crown = false,
     bool placeholder = false,
+    required String heroTag,
   }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -213,17 +219,37 @@ class _LeaderboardPageState extends State<LeaderboardPage>
         Stack(
           clipBehavior: Clip.none,
           children: [
-            CircleAvatar(
-              radius: 26,
-              backgroundColor:
-                  placeholder ? Colors.grey.shade700 : Colors.transparent,
-              backgroundImage: placeholder
-                  ? null
-                  : NetworkImage("http://192.168.1.104:8000" + avatar!),
-              child: placeholder
-                  ? const Icon(Icons.person, color: Colors.white24)
-                  : null,
-            ),
+            GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    PageRouteBuilder(
+                      opaque: false,
+                      barrierColor: Colors.black,
+                      pageBuilder: (_, __, ___) => ProfileImageViewer(
+                        heroTag: heroTag,
+                        imageProvider: (avatar!.isEmpty
+                                ? const AssetImage("assets/noprofile.jpg")
+                                : NetworkImage(
+                                    "http://10.10.10.23:8000" + avatar))
+                            as ImageProvider,
+                      ),
+                    ),
+                  );
+                },
+                child: Hero(
+                    tag: heroTag,
+                    child: CircleAvatar(
+                      radius: 26,
+                      backgroundColor: placeholder
+                          ? Colors.grey.shade700
+                          : Colors.transparent,
+                      backgroundImage: placeholder
+                          ? null
+                          : NetworkImage("http://10.10.10.23:8000" + avatar!),
+                      child: placeholder
+                          ? const Icon(Icons.person, color: Colors.white24)
+                          : null,
+                    ))),
             if (crown && !placeholder)
               const Positioned(
                 top: -20,
@@ -254,6 +280,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
           name,
           style: TextStyle(
             color: placeholder ? Colors.white38 : Colors.white,
+            fontSize: Constants.FS14,
           ),
         ),
 
@@ -262,7 +289,10 @@ class _LeaderboardPageState extends State<LeaderboardPage>
         if (!placeholder)
           Text(
             "$score",
-            style: const TextStyle(color: Colors.white70),
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: Constants.FS14,
+            ),
           ),
 
         // PODIUM BLOCK
@@ -299,7 +329,10 @@ class _LeaderboardPageState extends State<LeaderboardPage>
               children: [
                 Text(
                   "${i + 4}",
-                  style: const TextStyle(color: Colors.white70),
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Constants.FS14,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 CircleAvatar(
@@ -311,14 +344,20 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                 Expanded(
                   child: Text(
                     item["display_name"],
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: Constants.FS14,
+                    ),
                   ),
                 ),
                 Icon(Icons.circle, color: Constants.mainblue, size: 10),
                 const SizedBox(width: 6),
                 Text(
                   "${item["total_jumps"]}",
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: Constants.FS14,
+                  ),
                 ),
               ],
             ),
@@ -389,6 +428,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
           style: TextStyle(
             color: active ? Colors.black : Colors.white70,
             fontWeight: FontWeight.w600,
+            fontSize: Constants.FS14,
           ),
         ),
       ),
@@ -410,7 +450,11 @@ class _LeaderboardPageState extends State<LeaderboardPage>
       ),
       child: Row(
         children: [
-          const Icon(Icons.person, color: Colors.white),
+          const Icon(
+            Icons.person,
+            color: Colors.white,
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -418,19 +462,26 @@ class _LeaderboardPageState extends State<LeaderboardPage>
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
+                fontSize: Constants.FS14,
               ),
             ),
           ),
           Text(
             "#$myRank",
-            style: const TextStyle(color: Colors.white70),
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: Constants.FS14,
+            ),
           ),
           const SizedBox(width: 10),
           Icon(Icons.circle, color: Constants.mainblue, size: 8),
           const SizedBox(width: 6),
           Text(
             "$myTotalJumps",
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: Constants.FS14,
+            ),
           ),
         ],
       ),
@@ -444,21 +495,24 @@ class _LeaderboardPageState extends State<LeaderboardPage>
       alignment: Alignment.center,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
+        children: [
           Icon(Icons.emoji_events, size: 48, color: Colors.white24),
           SizedBox(height: 12),
           Text(
-            "Be the first 🔥",
+            "bethefirst".tr + " 🔥",
             style: TextStyle(
               color: Colors.white70,
-              fontSize: 18,
+              fontSize: Constants.FS18,
               fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 6),
           Text(
-            "Start a workout and claim the top spot",
-            style: TextStyle(color: Colors.white38),
+            "startworkoutmsg".tr,
+            style: TextStyle(
+              color: Colors.white38,
+              fontSize: Constants.FS14,
+            ),
           ),
         ],
       ),

@@ -47,18 +47,39 @@ class _SplashScreenState extends State<SplashScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                authenticating ? "signingin".tr : "initializing".tr,
-                style: TextStyle(
-                  color: Constants.maintextColor,
-                  fontSize: Constants.FS18,
+              Container(
+                width: Constants.sw / 4,
+                height: Constants.sw / 4,
+                child: Stack(
+                  children: [
+                    Center(
+                        child: Container(
+                            width: Constants.sw / 4,
+                            height: Constants.sw / 4,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 4, color: Constants.mainblue))),
+                    Padding(
+                      padding: EdgeInsets.all(1.5),
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(60),
+                          child: Image.asset(
+                            "assets/logo.png",
+                          )),
+                    ),
+                  ],
                 ),
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              CircularProgressIndicator(
-                  strokeWidth: 2, color: Constants.maintextColor),
+              )
+
+              // Text(
+              //   authenticating ? "signingin".tr : "initializing".tr,
+              //   style: TextStyle(
+              //     color: Constants.maintextColor,
+              //     fontSize: Constants.FS18,
+              //   ),
+              // ),
+              // SizedBox(
+              //   height: 10,
+              // ),
             ],
           ),
         ));
@@ -114,7 +135,7 @@ class _SplashScreenState extends State<SplashScreen> {
       method: 'POST',
       data: {"phone": pref.read("phone"), "token": pref.read("token")},
     );
-    if (data["success"]!=null && data["success"] == true) {
+    if (data["success"] != null && data["success"] == true) {
       pref.write("token", data["token"]);
 
       context.go('/home');

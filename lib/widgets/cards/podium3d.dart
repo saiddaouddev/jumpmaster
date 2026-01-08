@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jumpmaster/core/Constants.dart';
 
 class Podium3D extends StatelessWidget {
   final double width;
@@ -33,7 +34,7 @@ class Podium3D extends StatelessWidget {
               child: Text(
                 number,
                 style: TextStyle(
-                  fontSize: 56,
+                  fontSize: Constants.FS56,
                   fontWeight: FontWeight.bold,
                   color: Colors.white.withOpacity(0.12),
                 ),

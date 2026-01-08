@@ -5,23 +5,30 @@ import 'dart:typed_data';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
+import 'package:get/get.dart';
 import 'package:get/utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 // import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jumpmaster/core/Constants.dart';
+import 'package:jumpmaster/core/enums/setting_tile_type.dart';
+import 'package:jumpmaster/core/sound_manager.dart';
 import 'package:jumpmaster/core/storage.dart';
+import 'package:jumpmaster/core/vibration_manager.dart';
 import 'package:jumpmaster/models/achievements.dart';
 import 'package:jumpmaster/models/workout.dart';
 import 'package:jumpmaster/services/apiService.dart';
 import 'package:jumpmaster/utils/bottomsheet.dart';
+import 'package:jumpmaster/utils/profile_avatar_viewer.dart';
 import 'package:jumpmaster/widgets/cards/AchievementTrainItem.dart';
 import 'package:jumpmaster/widgets/cards/shareWorkoutCard.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -30,10 +37,17 @@ class Profile extends StatefulWidget {
   State<Profile> createState() => _ProfileState();
 }
 
-class _ProfileState extends State<Profile> {
+class _ProfileState extends State<Profile> with WidgetsBindingObserver {
   List<Achievement> achievementsList = [];
   final ScreenshotController controller = ScreenshotController();
 
+  // bool notificationsEnabled = true;
+  String appversion = "";
+  String SOUND_ENABLED_KEY = "sound_enabled";
+  String VIBRATION_ENABLED_KEY = "vibration_enabled";
+  bool soundEnabled = true;
+  bool vibrationEnabled = false;
+  double fontSize = 1; // Medium
   bool isFirstLoad = true;
   String username = "";
   String avatar = "";
@@ -77,12 +91,60 @@ class _ProfileState extends State<Profile> {
     }
   }
 
+  void updateFontSize(double sliderValue) {
+    double scale;
+    switch (sliderValue.toInt()) {
+      case 0:
+        scale = 0.5; //0.85; // Small
+        break;
+      case 2:
+        scale = 1.2; // Large
+        break;
+      default:
+        scale = 1.0; // Medium
+    }
+
+    Constants.updateFontScale(scale);
+    pref.write("font_scale", sliderValue);
+
+    setState(() {
+      fontSize = sliderValue;
+    });
+    Get.forceAppUpdate();
+  }
+
   Future<void> saveToGallery(Uint8List bytes) async {
     await Gal.putImageBytes(
       bytes,
       album: "Jump Master",
       name: "jump_master_${DateTime.now().millisecondsSinceEpoch}.png",
     );
+  }
+
+  Future<void> toggleVibration(bool enabled) async {
+    VibrationManager().setEnabled(enabled);
+
+    setState(() {
+      vibrationEnabled = enabled;
+    });
+  }
+
+  void initSoundSetting() {
+    bool enabled = pref.read(SOUND_ENABLED_KEY) ?? true;
+    bool vib_enabled = pref.read(VIBRATION_ENABLED_KEY) ?? true;
+
+    setState(() {
+      soundEnabled = enabled;
+      vibrationEnabled = vib_enabled;
+    });
+  }
+
+  Future<void> toggleSound(bool enabled) async {
+    SoundManager().setEnabled(enabled);
+
+    setState(() {
+      soundEnabled = enabled;
+    });
   }
 
   Future<void> shareWorkout(String jumps, int sec, String cal) async {
@@ -161,8 +223,25 @@ class _ProfileState extends State<Profile> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    log(state.toString());
+    if (state == AppLifecycleState.paused) {
+    } else if (state == AppLifecycleState.resumed) {
+      checkNotificationPermission();
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
+    PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
+      appversion = packageInfo.version;
+    });
+    WidgetsBinding.instance.addObserver(this);
+    fontSize = pref.read("font_scale") ?? 1.0;
+    updateFontSize(fontSize);
+    checkNotificationPermission();
+    initSoundSetting();
     getMe();
     getWorkouts();
     getAchievements();
@@ -175,6 +254,12 @@ class _ProfileState extends State<Profile> {
         getWorkouts(loadMore: true);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   bool loading = false;
@@ -249,7 +334,7 @@ class _ProfileState extends State<Profile> {
         loading = false;
         username = data["user"]["username"] ?? "";
         avatar = data["user"]["avatar"] != null
-            ? "http://192.168.1.104:8000${data["user"]["avatar"]}"
+            ? "http://10.10.10.23:8000${data["user"]["avatar"]}"
             : "";
         fullname = data["user"]["full_name"] ?? "";
         displayname = data["user"]["name"] ?? "";
@@ -306,7 +391,7 @@ class _ProfileState extends State<Profile> {
                     ? SizedBox(
                         height: 123,
                       )
-                    : SizedBox(height: 123, child: _profileHeader()),
+                    : _profileHeader(),
 
                 const SizedBox(height: 25),
 
@@ -340,41 +425,60 @@ class _ProfileState extends State<Profile> {
         width: settings ? 60 : Constants.sw / 4,
         child: Column(
           children: [
-            GestureDetector(
-              onTap: changeAvatar,
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: selectedImage != null
-                        ? Image.file(
-                            File(selectedImage!.path),
-                            width: 90,
-                            height: 90,
-                            fit: BoxFit.cover,
-                          )
-                        : Image(
-                            image: avatar.isEmpty
-                                ? const AssetImage("assets/noprofile.jpg")
-                                : NetworkImage(avatar) as ImageProvider,
-                            width: 90,
-                            height: 90,
-                            fit: BoxFit.cover,
+            Stack(
+              children: [
+                GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          opaque: false,
+                          barrierColor: Colors.black,
+                          pageBuilder: (_, __, ___) => ProfileImageViewer(
+                            heroTag: 'profile-avatar',
+                            imageProvider: selectedImage != null
+                                ? FileImage(File(selectedImage!.path))
+                                : (avatar.isEmpty
+                                    ? const AssetImage("assets/noprofile.jpg")
+                                    : NetworkImage(avatar)) as ImageProvider,
                           ),
-                  ),
-                  Align(
-                      alignment: Alignment.topRight,
-                      child: Container(
-                        padding: EdgeInsets.all(5),
-                        // width: 20,
-                        // height: 20,
-                        decoration: BoxDecoration(
-                            color: Constants.mainblue, shape: BoxShape.circle),
-                        child: Icon(Icons.edit,
-                            size: 18, color: Constants.maintextColor),
-                      ))
-                ],
-              ),
+                        ),
+                      );
+                    },
+                    child: Hero(
+                        tag: 'profile-avatar',
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(100),
+                          child: selectedImage != null
+                              ? Image.file(
+                                  File(selectedImage!.path),
+                                  width: 90,
+                                  height: 90,
+                                  fit: BoxFit.cover,
+                                )
+                              : Image(
+                                  image: avatar.isEmpty
+                                      ? const AssetImage("assets/noprofile.jpg")
+                                      : NetworkImage(avatar) as ImageProvider,
+                                  width: 90,
+                                  height: 90,
+                                  fit: BoxFit.cover,
+                                ),
+                        ))),
+                GestureDetector(
+                    onTap: changeAvatar,
+                    child: Align(
+                        alignment: Alignment.topRight,
+                        child: Container(
+                          padding: EdgeInsets.all(5),
+                          // width: 20,
+                          // height: 20,
+                          decoration: BoxDecoration(
+                              color: Constants.mainblue,
+                              shape: BoxShape.circle),
+                          child: Icon(Icons.edit,
+                              size: 18, color: Constants.maintextColor),
+                        )))
+              ],
             ),
             const SizedBox(height: 10),
             Text(
@@ -401,6 +505,7 @@ class _ProfileState extends State<Profile> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: TabBar(
+        labelStyle: TextStyle(fontSize: Constants.FS14),
         dividerColor: Colors.transparent, // ❌ remove default bottom line
         indicatorSize: TabBarIndicatorSize.tab,
 
@@ -419,7 +524,7 @@ class _ProfileState extends State<Profile> {
         tabs: [
           Tab(text: "basicinfo".tr),
           Tab(text: "workouts".tr),
-          Tab(text: "achievements".tr),
+          Tab(text: "badges".tr),
           Tab(text: "settings".tr),
         ],
       ),
@@ -564,7 +669,75 @@ class _ProfileState extends State<Profile> {
 
         /// SETTINGS
         ListView(
-          children: [],
+          children: [
+            settingsTile(
+              title: "notifications".tr,
+              subtitle: "receiveworkoutalerts".tr,
+              icon: Icons.notifications,
+              type: SettingTileType.toggle,
+              switchValue: pref.read("allownotification") ?? false,
+              onToggle: (value) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("redirectmsgAppSettings".tr),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                Future.delayed(Duration(seconds: 3), () {
+                  openAppSettings();
+                });
+              },
+            ),
+            settingsTile(
+              title: "sound".tr,
+              subtitle: "appsounds".tr,
+              icon: Icons.volume_up,
+              type: SettingTileType.toggle,
+              switchValue: soundEnabled,
+              onToggle: (v) => toggleSound(v),
+            ),
+            settingsTile(
+              title: "vibration".tr,
+              subtitle: "hapticfeedback".tr,
+              icon: Icons.vibration,
+              type: SettingTileType.toggle,
+              switchValue: vibrationEnabled,
+              onToggle: (v) => toggleVibration(v),
+            ),
+            fontSizeTile(
+              value: fontSize,
+              onChanged: (v) => updateFontSize(v),
+            ),
+            settingsTile(
+              title: "findourproducts".tr,
+              subtitle: "shopjumpmasteraccessories".tr,
+              icon: Icons.shopping_bag_outlined,
+              type: SettingTileType.navigation,
+              onTap: () {
+                launchLink("https://yourstore.com");
+              },
+            ),
+
+            // Contact support
+            settingsTile(
+              title: "contactsupport".tr,
+              subtitle: "whatsapp".tr,
+              icon: Icons.phone,
+              type: SettingTileType.navigation,
+              onTap: () {
+                launchLink("https://wa.me/96170123456");
+              },
+            ),
+
+            Center(
+              child: Text(
+                textAlign: TextAlign.center,
+                "appversion".tr + "\n$appversion",
+                style: TextStyle(
+                    color: Constants.maintextColor, fontSize: Constants.FS14),
+              ),
+            )
+          ],
         ),
       ],
     );
@@ -616,13 +789,15 @@ class _ProfileState extends State<Profile> {
       ),
       title: Text(
         title,
-        style: TextStyle(color: Constants.maintextColor),
+        style:
+            TextStyle(color: Constants.maintextColor, fontSize: Constants.FS16),
       ),
       subtitle: subtitle.isEmpty
           ? null
           : Text(
               subtitle,
               style: TextStyle(
+                fontSize: Constants.FS14,
                 color: Constants.maintextColor.withOpacity(0.6),
               ),
             ),
@@ -673,7 +848,8 @@ class _ProfileState extends State<Profile> {
               const SizedBox(height: 15),
               TextField(
                 controller: controller,
-                style: TextStyle(color: Constants.maintextColor),
+                style: TextStyle(
+                    color: Constants.maintextColor, fontSize: Constants.FS14),
                 decoration: InputDecoration(
                   hintText: "taptoadd".tr,
                   filled: true,
@@ -756,8 +932,8 @@ class _ProfileState extends State<Profile> {
         children: [
           // Left: Date
           Container(
-            width: 56,
-            height: 56,
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
               color: Constants.mainblue.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
@@ -767,6 +943,7 @@ class _ProfileState extends State<Profile> {
                 _dayText(workout.startedAt),
                 textAlign: TextAlign.center,
                 style: TextStyle(
+                  fontSize: Constants.FS12,
                   fontWeight: FontWeight.bold,
                   color: Constants.mainblue,
                 ),
@@ -784,7 +961,7 @@ class _ProfileState extends State<Profile> {
                 Text(
                   workout.startedAtFormatted.toString(),
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: Constants.FS12,
                     color: Constants.maintextColor.withOpacity(0.5),
                   ),
                 ),
@@ -792,7 +969,7 @@ class _ProfileState extends State<Profile> {
                 Text(
                   "${workout.jumps} jumps • ${workout.durationSeconds} sec",
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: Constants.FS14,
                     fontWeight: FontWeight.w600,
                     color: Constants.maintextColor,
                   ),
@@ -830,6 +1007,7 @@ class _ProfileState extends State<Profile> {
               Text(
                 "${workout.calories.toStringAsFixed(0)} kcal",
                 style: TextStyle(
+                  fontSize: Constants.FS12,
                   fontWeight: FontWeight.bold,
                   color: Constants.maintextColor,
                 ),
@@ -861,5 +1039,159 @@ class _ProfileState extends State<Profile> {
       "DEC"
     ];
     return months[m - 1];
+  }
+
+  Widget settingsTile({
+    required String title,
+    String? subtitle,
+    required IconData icon,
+    required SettingTileType type,
+
+    // Toggle
+    bool? switchValue,
+    ValueChanged<bool>? onToggle,
+
+    // Navigation
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      onTap: type == SettingTileType.navigation ? onTap : null,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: title == "contactsupport".tr
+              ? Colors.green
+              : Constants.maintextColor.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(icon,
+            color: title == "contactsupport".tr
+                ? Colors.white
+                : Constants.maintextColor),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: Constants.maintextColor,
+          fontSize: Constants.FS16,
+        ),
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: Constants.FS14,
+                color: Constants.maintextColor.withOpacity(0.6),
+              ),
+            )
+          : null,
+      trailing: type == SettingTileType.toggle
+          ? Switch(
+              value: switchValue ?? false,
+              onChanged: onToggle,
+              activeColor: Constants.mainblue,
+            )
+          : type == SettingTileType.navigation
+              ? Icon(
+                  Icons.arrow_forward_ios,
+                  size: 18,
+                  color: Constants.maintextColor.withOpacity(0.6),
+                )
+              : null,
+    );
+  }
+
+  Widget fontSizeTile({
+    required double value, // 0 = Small, 1 = Medium, 2 = Large
+    required ValueChanged<double> onChanged,
+  }) {
+    final labels = ["small".tr, "medium".tr, "large".tr];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Constants.backgroundcolor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: Constants.maintextColor.withOpacity(0.07),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Icon(Icons.text_fields, color: Constants.maintextColor),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "fontsize".tr,
+                style: TextStyle(
+                  color: Constants.maintextColor,
+                  fontSize: Constants.FS16,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Slider(
+            value: value,
+            min: 0,
+            max: 2,
+            divisions: 2,
+            label: labels[value.toInt()],
+            activeColor: Constants.mainblue,
+            onChanged: onChanged,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: labels
+                .map(
+                  (e) => Text(
+                    e,
+                    style: TextStyle(
+                      color: Constants.maintextColor.withOpacity(0.6),
+                      fontSize: Constants.FS12,
+                    ),
+                  ),
+                )
+                .toList(),
+          )
+        ],
+      ),
+    );
+  }
+
+  Future<void> launchLink(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
+  }
+
+  bool showNotification = false;
+  Future<void> checkNotificationPermission() async {
+    bool allowed = false;
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      final sdkInt = androidInfo.version.sdkInt;
+      PermissionStatus status = await Permission.notification.status;
+      allowed = status.isGranted;
+      // log(status.toString());
+    } else {
+      // iOS handled elsewhere
+      PermissionStatus status = await Permission.notification.status;
+      allowed = status.isGranted;
+    }
+
+    pref.write("allownotification", allowed);
+    setState(() {
+      showNotification = allowed;
+    });
   }
 }

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 class Constants {
-  static String baseUrl = 'http://192.168.1.104:8000/api/';
+  static String baseUrl = 'http://10.10.10.23:8000/api/';
+
   static double sw = 0.0;
   static double sh = 0.0;
   static ValueNotifier<int> profileCompletion = ValueNotifier<int>(0);
 
-  //fontsize
+  // Font scale (default = 1.0)
+  static double fontScale = 1.0;
+
+  // Base font sizes
   static double FS10 = 10.0;
   static double FS12 = 12.0;
   static double FS14 = 14.0;
@@ -15,7 +19,31 @@ class Constants {
   static double FS20 = 20.0;
   static double FS22 = 22.0;
   static double FS24 = 24.0;
+  static double FS26 = 26.0;
+  static double FS28 = 28.0;
   static double FS36 = 36.0;
+  static double FS40 = 36.0;
+  static double FS56 = 56.0;
+  static double FS60 = 60.0;
+
+  // Call this when font size changes
+  static void updateFontScale(double scale) {
+    fontScale = scale;
+    Constants.FS10 = 10.0 * fontScale;
+    Constants.FS12 = 12.0 * fontScale;
+    Constants.FS14 = 14.0 * fontScale;
+    Constants.FS16 = 16.0 * fontScale;
+    Constants.FS18 = 18.0 * fontScale;
+    Constants.FS20 = 20.0 * fontScale;
+    Constants.FS22 = 22.0 * fontScale;
+    Constants.FS24 = 24.0 * fontScale;
+    Constants.FS26 = 26.0 * fontScale;
+    Constants.FS28 = 28.0 * fontScale;
+    Constants.FS36 = 36.0 * fontScale;
+    Constants.FS36 = 40.0 * fontScale;
+    Constants.FS56 = 56.0 * fontScale;
+    Constants.FS60 = 60.0 * fontScale;
+  }
 
   //colors
   static Color backgroundcolor = const Color.fromARGB(255, 11, 11, 11);

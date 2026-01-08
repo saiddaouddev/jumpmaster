@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jumpmaster/core/Constants.dart';
 
 class StatItem extends StatelessWidget {
   final IconData icon;
@@ -19,8 +20,8 @@ class StatItem extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 32,
+          style: TextStyle(
+            fontSize: Constants.FS28,
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -28,8 +29,8 @@ class StatItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: Constants.FS16,
             color: Colors.white38,
           ),
         ),

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
 import 'package:jumpmaster/core/Constants.dart';
+import 'package:jumpmaster/core/sound_manager.dart';
+import 'package:jumpmaster/core/vibration_manager.dart';
 import 'package:jumpmaster/services/apiService.dart';
 import 'package:jumpmaster/widgets/cards/statItem.dart';
 import 'package:jumpmaster/widgets/cards/statchip.dart';
@@ -36,10 +38,14 @@ class _WorkoutPageState extends State<WorkoutPage>
   // ANIMATION
   late AnimationController _anim;
   late Animation<double> _fade;
-
+  bool soundEnabled = true;
+  bool vibrationEnabled = true;
   @override
   void initState() {
     super.initState();
+
+    soundEnabled = SoundManager().isEnabled;
+    vibrationEnabled = VibrationManager().isEnabled;
     WidgetsBinding.instance.addObserver(this);
 
     _anim = AnimationController(
@@ -56,12 +62,12 @@ class _WorkoutPageState extends State<WorkoutPage>
     final data = await ApiService.callApi(api: "stats/me", method: "GET");
 
     if (data["success"] == true && data["today"] != null) {
-      final today = data["today"];  
+      final today = data["today"];
       final user = data["user"];
       today_date = data["date"];
 
       setState(() {
-        user_avatar = "http://192.168.1.104:8000" + user["avatar"].toString();
+        user_avatar = "http://10.10.10.23:8000" + user["avatar"].toString();
         todayTotalJumps = today["total_jumps"].toString();
         todayTotalDuration = today["total_duration_seconds"].toString();
         todayTotalCalories = today["total_calories"].toString();
@@ -104,6 +110,9 @@ class _WorkoutPageState extends State<WorkoutPage>
       freeTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         setState(() => workoutSeconds++);
       });
+
+      SoundManager().play("start.mp3");
+      VibrationManager().vibrate(duration: 200);
     }
   }
 
@@ -134,6 +143,8 @@ class _WorkoutPageState extends State<WorkoutPage>
 
       todayTotalJumps = todayStats["total_jumps"].toString();
       todaySessions = todayStats["total_sessions"].toString();
+
+      VibrationManager().vibrate(duration: 400);
 
       setState(() => isFreeRunning = false);
 
@@ -184,7 +195,7 @@ class _WorkoutPageState extends State<WorkoutPage>
                             "workoutcompleted".tr,
                             style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 22,
+                                fontSize: Constants.FS22,
                                 fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 25),
@@ -262,13 +273,13 @@ class _WorkoutPageState extends State<WorkoutPage>
         children: [
           Text(formatTime(workoutSeconds),
               style: TextStyle(
-                  fontSize: 28,
+                  fontSize: Constants.FS28,
                   fontWeight: FontWeight.w600,
                   color: Constants.maintextColor)),
           const SizedBox(height: 10),
           Text("$jumps",
               style: TextStyle(
-                  fontSize: 40,
+                  fontSize: Constants.FS40,
                   fontWeight: FontWeight.bold,
                   color: Constants.maintextColor)),
           Text(
@@ -290,7 +301,17 @@ class _WorkoutPageState extends State<WorkoutPage>
                 child: actionButton(
                   text: "+ Jump",
                   color: Colors.blueGrey,
-                  onTap: isFreeRunning ? () => setState(() => jumps++) : null,
+                  onTap: isFreeRunning
+                      ? () {
+                          setState(() {
+                            jumps++;
+
+                            if (jumps > 0 && jumps % 100 == 0) {
+                              SoundManager().play("start.mp3");
+                            }
+                          });
+                        }
+                      : null,
                 ),
               ),
             ],
@@ -348,7 +369,7 @@ class _WorkoutPageState extends State<WorkoutPage>
                   "todayworkout".tr,
                   style: TextStyle(
                     color: Colors.white70,
-                    fontSize: 14,
+                    fontSize: Constants.FS14,
                     fontWeight: FontWeight.w500,
                   ),
                 )
@@ -359,7 +380,7 @@ class _WorkoutPageState extends State<WorkoutPage>
                     today_date,
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 14,
+                      fontSize: Constants.FS14,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -373,9 +394,9 @@ class _WorkoutPageState extends State<WorkoutPage>
           // MAIN STAT
           Text(
             "$todayTotalJumps",
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 36,
+              fontSize: Constants.FS36,
               fontWeight: FontWeight.bold,
               height: 1,
             ),
@@ -384,7 +405,7 @@ class _WorkoutPageState extends State<WorkoutPage>
             "totaljumps".tr,
             style: TextStyle(
               color: Colors.white70,
-              fontSize: 14,
+              fontSize: Constants.FS14,
             ),
           ),
 

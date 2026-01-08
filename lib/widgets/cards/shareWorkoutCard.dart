@@ -38,16 +38,16 @@ class ShareWorkoutCard extends StatelessWidget {
           Text(
             jumps.toString(),
             style: TextStyle(
-              fontSize: 60,
+              fontSize: Constants.FS60,
               fontWeight: FontWeight.bold,
               color: Constants.mainblue,
             ),
           ),
-          const Text(
+            Text(
             "JUMPS",
             style: TextStyle(
               letterSpacing: 4,
-              fontSize: 26,
+              fontSize: Constants.FS26,
               color: Colors.white70,
             ),
           ),
@@ -89,11 +89,11 @@ class ShareWorkoutCard extends StatelessWidget {
               SizedBox(
                 width: 15,
               ),
-              const Text(
+                Text(
                 "#JumpMaster",
                 style: TextStyle(
                   color: Colors.white38,
-                  fontSize: 20,
+                  fontSize: Constants.FS20,
                 ),
               )
             ],
