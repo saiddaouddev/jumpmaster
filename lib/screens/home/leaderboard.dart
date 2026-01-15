@@ -230,7 +230,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                         imageProvider: (avatar!.isEmpty
                                 ? const AssetImage("assets/noprofile.jpg")
                                 : NetworkImage(
-                                    "http://10.10.10.23:8000" + avatar))
+                                    "http://192.168.1.108:8000" + avatar))
                             as ImageProvider,
                       ),
                     ),
@@ -245,7 +245,7 @@ class _LeaderboardPageState extends State<LeaderboardPage>
                           : Colors.transparent,
                       backgroundImage: placeholder
                           ? null
-                          : NetworkImage("http://10.10.10.23:8000" + avatar!),
+                          : NetworkImage("http://192.168.1.108:8000" + avatar!),
                       child: placeholder
                           ? const Icon(Icons.person, color: Colors.white24)
                           : null,

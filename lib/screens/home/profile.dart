@@ -334,7 +334,7 @@ class _ProfileState extends State<Profile> with WidgetsBindingObserver {
         loading = false;
         username = data["user"]["username"] ?? "";
         avatar = data["user"]["avatar"] != null
-            ? "http://10.10.10.23:8000${data["user"]["avatar"]}"
+            ? "http://192.168.1.108:8000${data["user"]["avatar"]}"
             : "";
         fullname = data["user"]["full_name"] ?? "";
         displayname = data["user"]["name"] ?? "";

@@ -67,7 +67,7 @@ class _WorkoutPageState extends State<WorkoutPage>
       today_date = data["date"];
 
       setState(() {
-        user_avatar = "http://10.10.10.23:8000" + user["avatar"].toString();
+        user_avatar = "http://192.168.1.108:8000" + user["avatar"].toString();
         todayTotalJumps = today["total_jumps"].toString();
         todayTotalDuration = today["total_duration_seconds"].toString();
         todayTotalCalories = today["total_calories"].toString();

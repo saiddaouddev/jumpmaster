@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Constants {
-  static String baseUrl = 'http://10.10.10.23:8000/api/';
+  static String baseUrl = 'http://192.168.1.108:8000/api/';
 
   static double sw = 0.0;
   static double sh = 0.0;
